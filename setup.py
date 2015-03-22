@@ -1,11 +1,15 @@
 from setuptools import setup, find_packages
 
+with open('README.rst', 'r') as infile:
+    read_me = infile.read()
+
 setup(
     packages=find_packages(),
 
     name='depq',
     version='1.0.0',
     description='Double-ended priority queue',
+    long_description=read_me,
     author='Ofek Lev',
     author_email='ofekmeister@gmail.com',
     maintainer='Ofek Lev',
