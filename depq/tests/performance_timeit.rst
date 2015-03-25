@@ -27,7 +27,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> mean(timeit.Timer('for r in randoms:d.binary_insert(None, r)', setup=s).repeat(50, 1))
 0.96281240967293569
 >>> mean(timeit.Timer('for r in randoms:d.insert(None, r)', setup=s).repeat(50, 1))
-0.47464242037091026
+0.36838486254875036
 >>>
 
 

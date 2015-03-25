@@ -69,6 +69,7 @@ Notes:
 """
 
 from collections import deque
+from threading import Lock
 
 
 class DEPQ:
@@ -79,70 +80,73 @@ class DEPQ:
         self.data = deque()
         self.items = dict()
         self.start = start
+        self.lock = Lock()
 
     def insert(self, item, priority):
         """Adds item to DEPQ with given priority by performing a binary
         search on the concurrently rotating deque. Amount rotated R of
         DEPQ of length n would be n <= R <= 3n/2. Performance: O(n)"""
 
-        try:
+        with self.lock:
 
-            if priority > self.data[0][1]:
-                self.data.appendleft((item, priority))
-            elif priority <= self.data[-1][1]:
-                self.data.append((item, priority))
-            else:
-
-                length = len(self.data)
-                mid = length // 2
-                shift = 0
-
-                while True:
-
-                    if priority <= self.data[0][1]:
-                        self.data.rotate(-mid)
-                        shift += mid
-                        mid //= 2
-                        if mid == 0:
-                            mid += 1
-
-                    else:
-                        self.data.rotate(mid)
-                        shift -= mid
-                        mid //= 2
-                        if mid == 0:
-                            mid += 1
-
-                    if self.data[-1][1] >= priority > self.data[0][1]:
-                        self.data.appendleft((item, priority))
-
-                        # When returning to original position, never shift
-                        # more than half length of DEPQ i.e. if length is
-                        # 100 and we rotated -75, rotate -25, not 75
-                        if shift > length // 2:
-                            shift = length % shift + 1
-                            self.data.rotate(-shift)
-                        else:
-                            self.data.rotate(shift)
-
-                        try:
-                            self.items[item] += 1
-                        except KeyError:
-                            self.items[item] = 1
-                        except TypeError:
-                            try:
-                                self.items[repr(item)] += 1
-                            except KeyError:
-                                self.items[repr(item)] = 1
-
-                        break
-
-        except IndexError:
-            self.data.append((item, priority))
             try:
-                self.items[item] = 1
-            except TypeError:
-                self.items[repr(item)] = 1
+
+                if priority > self.data[0][1]:
+                    self.data.appendleft((item, priority))
+                elif priority <= self.data[-1][1]:
+                    self.data.append((item, priority))
+                else:
+
+                    length = len(self.data)
+                    mid = length // 2
+                    shift = 0
+
+                    while True:
+
+                        if priority <= self.data[0][1]:
+                            self.data.rotate(-mid)
+                            shift += mid
+                            mid //= 2
+                            if mid == 0:
+                                mid += 1
+
+                        else:
+                            self.data.rotate(mid)
+                            shift -= mid
+                            mid //= 2
+                            if mid == 0:
+                                mid += 1
+
+                        if self.data[-1][1] >= priority > self.data[0][1]:
+                            self.data.appendleft((item, priority))
+
+                            # When returning to original position, never shift
+                            # more than half length of DEPQ i.e. if length is
+                            # 100 and we rotated -75, rotate -25, not 75
+                            if shift > length // 2:
+                                shift = length % shift + 1
+                                self.data.rotate(-shift)
+                            else:
+                                self.data.rotate(shift)
+
+                            break
+
+                try:
+                    self.items[item] += 1
+                except KeyError:
+                    self.items[item] = 1
+                except TypeError:
+                    try:
+                        self.items[repr(item)] += 1
+                    except KeyError:
+                        self.items[repr(item)] = 1
+
+            except IndexError:
+                self.data.append((item, priority))
+                try:
+                    self.items[item] = 1
+                except TypeError:
+                    self.items[repr(item)] = 1
 
     def addfirst(self, item, new_priority=None):
         """Adds item to DEPQ as highest priority. The default
@@ -157,7 +161,7 @@ class DEPQ:
                 else:
                     priority = new_priority
         except IndexError:
-            priority = self.start
+            priority = self.start if new_priority is None else new_priority
         except ValueError:
             raise ValueError('\nPriority must be >= highest priority.')
 
@@ -186,7 +190,7 @@ class DEPQ:
                 else:
                     priority = new_priority
         except IndexError:
-            priority = self.start
+            priority = self.start if new_priority is None else new_priority
         except ValueError:
             raise ValueError('\nPriority must be <= lowest priority.')
 
@@ -294,39 +298,41 @@ class DEPQ:
         completion, inactive clients, certain algorithms, etc. Returns a
         list of tuple(item, priority), or None. Performance: O(n)"""
 
-        try:
-            item_freq = self.items[item]
-            item_repr = item
-        except KeyError:
-            return None
-        except TypeError:
+        with self.lock:
+
             try:
-                item_freq = self.items[repr(item)]
-                item_repr = repr(item)
+                item_freq = self.items[item]
+                item_repr = item
             except KeyError:
                 return None
+            except TypeError:
+                try:
+                    item_freq = self.items[repr(item)]
+                    item_repr = repr(item)
+                except KeyError:
+                    return None
 
-        if count != 0:
+            if count != 0:
 
-            if count == -1:
-                count = item_freq
+                if count == -1:
+                    count = item_freq
 
-            counter = 0
-            removed = []
+                counter = 0
+                removed = []
 
-            for i in range(len(self.data)):
-                if count > counter and item == self.data[-1][0]:
-                    removed.append(self.data.pop())
-                    counter += 1
-                    continue
-                self.data.rotate()
+                for i in range(len(self.data)):
+                    if count > counter and item == self.data[-1][0]:
+                        removed.append(self.data.pop())
+                        counter += 1
+                        continue
+                    self.data.rotate()
 
-            if item_freq <= count:
-                del self.items[item_repr]
-            else:
-                self.items[item_repr] -= count
+                if item_freq <= count:
+                    del self.items[item_repr]
+                else:
+                    self.items[item_repr] -= count
 
-            return removed
+                return removed
 
     def elim(self, item):
         """Removes all occurrences of item. Returns a list of
@@ -342,18 +348,18 @@ class DEPQ:
         self.insert(item, priority)
 
     def _getitem(self, index):
-        """Gets priority at given index."""
+        """Gets item at given index."""
         try:
             return self.data[index][0]
         except IndexError:
-            return None
+            raise IndexError('DEPQ is empty')
 
     def _getpriority(self, index):
         """Gets priority at given index."""
         try:
             return self.data[index][1]
         except IndexError:
-            return None
+            raise IndexError('DEPQ is empty')
 
     def __contains__(self, item):
         try:
