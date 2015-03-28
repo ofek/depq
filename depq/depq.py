@@ -384,13 +384,15 @@ class DEPQ:
 
     def __iter__(self):
         """Returns highly efficient deque C iterator."""
-        return iter(self.data)
+        with self.lock:
+            return iter(self.data)
 
     def __getitem__(self, index):
-        try:
-            return self.data[index]
-        except IndexError:
-            raise IndexError('DEPQ has no index {}'.format(index))
+        with self.lock:
+            try:
+                return self.data[index]
+            except IndexError:
+                raise IndexError('DEPQ has no index {}'.format(index))
 
     def __setitem__(self, item, priority):
         """Alias for self.insert"""
@@ -401,13 +403,16 @@ class DEPQ:
                                   'referencing arbitrary indices.')
 
     def __len__(self):
-        return len(self.data)
+        with self.lock:
+            return len(self.data)
 
     def __repr__(self):
-        return 'DEPQ([{}])'.format(', '.join(str(item) for item in self.data))
+        with self.lock:
+            return 'DEPQ([{}])'.format(', '.join(str(item) for item in self.data))
 
     def __str__(self):
-        return 'DEPQ([{}])'.format(', '.join(str(item) for item in self.data))
+        with self.lock:
+            return 'DEPQ([{}])'.format(', '.join(str(item) for item in self.data))
 
     def __unicode__(self):
         return self.__str__()
