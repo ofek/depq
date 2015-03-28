@@ -13,14 +13,14 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> import timeit
 >>> from numpy import mean
 >>>
->>> s='''
+>>> s="""
 ... from depq import DEPQ
 ... from random import SystemRandom
 ... r = SystemRandom()
 ... randoms = [r.randrange(0, 3000000) for i in range(100)]
 ... d = DEPQ()
-... for i in range(3000000): d.addfirst(i)
-... '''
+... for i in range(3000000): d.addfirst(None, i)
+... """
 >>>
 >>> mean(timeit.Timer('for r in randoms:d.linear_insert(None, r)', setup=s).repeat(50, 1))
 3.6656986826664957

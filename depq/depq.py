@@ -153,213 +153,228 @@ class DEPQ:
         starting priority is self.start, the default new
         priority is self.high(). Performance: O(1)"""
 
-        try:
-            priority = self.data[0][1]
-            if new_priority is not None:
-                if new_priority < priority:
-                    raise ValueError
-                else:
-                    priority = new_priority
-        except IndexError:
-            priority = self.start if new_priority is None else new_priority
-        except ValueError:
-            raise ValueError('\nPriority must be >= highest priority.')
+        with self.lock:
 
-        self.data.appendleft((item, priority))
-
-        try:
-            self.items[item] += 1
-        except KeyError:
-            self.items[item] = 1
-        except TypeError:
             try:
-                self.items[repr(item)] += 1
+                priority = self.data[0][1]
+                if new_priority is not None:
+                    if new_priority < priority:
+                        raise ValueError
+                    else:
+                        priority = new_priority
+            except IndexError:
+                priority = self.start if new_priority is None else new_priority
+            except ValueError:
+                raise ValueError('\nPriority must be >= highest priority.')
+
+            self.data.appendleft((item, priority))
+
+            try:
+                self.items[item] += 1
             except KeyError:
-                self.items[repr(item)] = 1
+                self.items[item] = 1
+            except TypeError:
+                try:
+                    self.items[repr(item)] += 1
+                except KeyError:
+                    self.items[repr(item)] = 1
 
     def addlast(self, item, new_priority=None):
         """Adds item to DEPQ as lowest priority. The default
         starting priority is self.start, the default new
         priority is self.low(). Performance: O(1)"""
 
-        try:
-            priority = self.data[-1][1]
-            if new_priority is not None:
-                if new_priority > priority:
-                    raise ValueError
-                else:
-                    priority = new_priority
-        except IndexError:
-            priority = self.start if new_priority is None else new_priority
-        except ValueError:
-            raise ValueError('\nPriority must be <= lowest priority.')
+        with self.lock:
 
-        self.data.append((item, priority))
-
-        try:
-            self.items[item] += 1
-        except KeyError:
-            self.items[item] = 1
-        except TypeError:
             try:
-                self.items[repr(item)] += 1
+                priority = self.data[-1][1]
+                if new_priority is not None:
+                    if new_priority > priority:
+                        raise ValueError
+                    else:
+                        priority = new_priority
+            except IndexError:
+                priority = self.start if new_priority is None else new_priority
+            except ValueError:
+                raise ValueError('\nPriority must be <= lowest priority.')
+
+            self.data.append((item, priority))
+
+            try:
+                self.items[item] += 1
             except KeyError:
-                self.items[repr(item)] = 1
+                self.items[item] = 1
+            except TypeError:
+                try:
+                    self.items[repr(item)] += 1
+                except KeyError:
+                    self.items[repr(item)] = 1
 
     def popfirst(self):
         """Removes item with highest priority from DEPQ. Returns
         tuple(item, priority). Performance: O(1)"""
 
-        try:
-            tup = self.data.popleft()
-        except IndexError:
-            raise IndexError('DEPQ is already empty')
+        with self.lock:
 
-        try:
-            self.items[tup[0]] -= 1
-            if self.items[tup[0]] == 0:
-                del self.items[tup[0]]
-        except TypeError:
-            r = repr(tup[0])
-            self.items[r] -= 1
-            if self.items[r] == 0:
-                del self.items[r]
+            try:
+                tup = self.data.popleft()
+            except IndexError:
+                raise IndexError('DEPQ is already empty')
 
-        return tup
+            try:
+                self.items[tup[0]] -= 1
+                if self.items[tup[0]] == 0:
+                    del self.items[tup[0]]
+            except TypeError:
+                r = repr(tup[0])
+                self.items[r] -= 1
+                if self.items[r] == 0:
+                    del self.items[r]
+
+            return tup
 
     def poplast(self):
         """Removes item with lowest priority from DEPQ. Returns
         tuple(item, priority). Performance: O(1)"""
 
-        try:
-            tup = self.data.pop()
-        except IndexError:
-            raise IndexError('DEPQ is already empty')
+        with self.lock:
 
-        try:
-            self.items[tup[0]] -= 1
-            if self.items[tup[0]] == 0:
-                del self.items[tup[0]]
-        except TypeError:
-            r = repr(tup[0])
-            self.items[r] -= 1
-            if self.items[r] == 0:
-                del self.items[r]
+            try:
+                tup = self.data.pop()
+            except IndexError:
+                raise IndexError('DEPQ is already empty')
 
-        return tup
+            try:
+                self.items[tup[0]] -= 1
+                if self.items[tup[0]] == 0:
+                    del self.items[tup[0]]
+            except TypeError:
+                r = repr(tup[0])
+                self.items[r] -= 1
+                if self.items[r] == 0:
+                    del self.items[r]
+
+            return tup
 
     def first(self):
         """Gets item with highest priority. Performance: O(1)"""
-        return self._getitem(0)
+        with self.lock:
+            try:
+                return self.data[0][0]
+            except IndexError:
+                raise IndexError('DEPQ is empty')
 
     def last(self):
         """Gets item with lowest priority. Performance: O(1)"""
-        return self._getitem(-1)
+        with self.lock:
+            try:
+                return self.data[-1][0]
+            except IndexError:
+                raise IndexError('DEPQ is empty')
 
     def high(self):
         """Gets highest priority. Performance: O(1)"""
-        return self._getpriority(0)
+        with self.lock:
+            try:
+                return self.data[0][1]
+            except IndexError:
+                raise IndexError('DEPQ is empty')
 
     def low(self):
         """Gets lowest priority. Performance: O(1)"""
-        return self._getpriority(-1)
+        with self.lock:
+            try:
+                return self.data[-1][1]
+            except IndexError:
+                raise IndexError('DEPQ is empty')
 
     def size(self):
         """Gets length of DEPQ. Performance: O(1)"""
-        return len(self.data)
+        with self.lock:
+            return len(self.data)
 
     def clear(self):
         """Empties DEPQ. Performance: O(1)"""
-        self.data.clear()
-        self.items.clear()
+        with self.lock:
+            self.data.clear()
+            self.items.clear()
 
     def is_empty(self):
         """Returns True if DEPQ is empty, else False. Performance: O(1)"""
-        return len(self.data) == 0
+        with self.lock:
+            return len(self.data) == 0
 
     def count(self, item):
         """Returns number of occurrences of item in DEPQ. Performance: O(1)"""
 
-        # If item isn't in DEPQ, returning 0 is
-        # more appropriate than None, methinks.
-        try:
-            return self.items[item]
-        except KeyError:
-            return 0
-        except TypeError:
+        with self.lock:
+
+            # If item isn't in DEPQ, returning 0 is
+            # more appropriate than None, methinks.
             try:
-                return self.items[repr(item)]
+                return self.items[item]
             except KeyError:
                 return 0
+            except TypeError:
+                try:
+                    return self.items[repr(item)]
+                except KeyError:
+                    return 0
 
     def remove(self, item, count=1):
         """Removes occurrences of given item in ascending priority. Default
         number of removals is 1. Useful for tasks that no longer require
         completion, inactive clients, certain algorithms, etc. Returns a
-        list of tuple(item, priority), or None. Performance: O(n)"""
+        list of tuple(item, priority). Performance: O(n)"""
 
         with self.lock:
+
+            try:
+                count = int(count)
+            except ValueError:
+                raise ValueError('{} cannot be represented as '
+                                 'an integer'.format(count))
+            except TypeError:
+                raise TypeError('{} cannot be represented as '
+                                'an integer'.format(count))
+
+            removed = []
 
             try:
                 item_freq = self.items[item]
                 item_repr = item
             except KeyError:
-                return None
+                return removed
             except TypeError:
                 try:
                     item_freq = self.items[repr(item)]
                     item_repr = repr(item)
                 except KeyError:
-                    return None
+                    return removed
 
-            if count != 0:
+            if count == -1:
+                count = item_freq
 
-                if count == -1:
-                    count = item_freq
+            counter = 0
 
-                counter = 0
-                removed = []
+            for i in range(len(self.data)):
+                if count > counter and item == self.data[-1][0]:
+                    removed.append(self.data.pop())
+                    counter += 1
+                    continue
+                self.data.rotate()
 
-                for i in range(len(self.data)):
-                    if count > counter and item == self.data[-1][0]:
-                        removed.append(self.data.pop())
-                        counter += 1
-                        continue
-                    self.data.rotate()
+            if item_freq <= count:
+                del self.items[item_repr]
+            else:
+                self.items[item_repr] -= count
 
-                if item_freq <= count:
-                    del self.items[item_repr]
-                else:
-                    self.items[item_repr] -= count
-
-                return removed
+            return removed
 
     def elim(self, item):
         """Removes all occurrences of item. Returns a list of
-        tuple(item, priority), or None. Performance: O(n)"""
+        tuple(item, priority). Performance: O(n)"""
         return self.remove(item, -1)
-
-    def set(self, item, priority):
-        """Inserts item in DEPQ. If item already exists, removes first
-        occurrence of given item with lowest priority beforehand,
-        essentially attempting to change its priority."""
-        if item in self:
-            self.remove(item)
-        self.insert(item, priority)
-
-    def _getitem(self, index):
-        """Gets item at given index."""
-        try:
-            return self.data[index][0]
-        except IndexError:
-            raise IndexError('DEPQ is empty')
-
-    def _getpriority(self, index):
-        """Gets priority at given index."""
-        try:
-            return self.data[index][1]
-        except IndexError:
-            raise IndexError('DEPQ is empty')
 
     def __contains__(self, item):
         try:
@@ -378,12 +393,12 @@ class DEPQ:
             raise IndexError('DEPQ has no index {}'.format(index))
 
     def __setitem__(self, item, priority):
-        """Alias for self.set"""
-        self.set(item, priority)
+        """Alias for self.insert"""
+        self.insert(item, priority)
 
     def __delitem__(self, index):
-        raise Exception('\nItems cannot be deleted by '
-                        'referencing arbitrary indices.')
+        raise NotImplementedError('\nItems cannot be deleted by '
+                                  'referencing arbitrary indices.')
 
     def __len__(self):
         return len(self.data)
@@ -392,7 +407,7 @@ class DEPQ:
         return 'DEPQ([{}])'.format(', '.join(str(item) for item in self.data))
 
     def __str__(self):
-        return '[{}]'.format(', '.join(str(item) for item in self.data))
+        return 'DEPQ([{}])'.format(', '.join(str(item) for item in self.data))
 
     def __unicode__(self):
         return self.__str__()
