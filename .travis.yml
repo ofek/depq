@@ -12,5 +12,6 @@ env:
   - TOXENV=py33
   - TOXENV=py34
 install:
+  - "pip install ."
   - "pip install tox"
 script: nosetests
