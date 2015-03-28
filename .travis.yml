@@ -13,6 +13,4 @@ env:
   - TOXENV=py34
 install:
   - "pip install tox"
-script: nosetests
-
-
+script: "tox -- -rs"
