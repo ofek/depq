@@ -1,6 +1,9 @@
 .. image:: https://travis-ci.org/Ofekmeister/depq.svg?branch=master
     :target: https://travis-ci.org/Ofekmeister/depq
 
+.. image:: https://coveralls.io/repos/Ofekmeister/depq/badge.svg?branch=master
+  :target: https://coveralls.io/r/Ofekmeister/depq?branch=master
+
 ==========
 depq
 ==========
