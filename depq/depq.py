@@ -21,7 +21,9 @@ THE SOFTWARE.
 """
 
 __doc__ = """
-Description:
+==========
+depq
+==========
 
   - Python implementation of a thread-safe and efficient
     double-ended priority queue (DEPQ) in which items and their
@@ -32,7 +34,8 @@ Description:
 Features & advantages of this implementation:
 
   - Completely thread-safe
-  - Priority values can be ANY comparable type you choose!
+  - Priority values can be ints/floats, numpy types, strings, or
+    any other comparable type you choose!
   - popfirst() and poplast() have O(1) performance instead of
     running in logarithmic time like in a standard DEPQ
   - Naturally fast also because deque object is implemented in C
