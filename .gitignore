@@ -1,10 +1,8 @@
 *.pyc
+*.log
+/.idea
 /.coverage
 /depq.egg-info
-
-/.idea
 /build
 /dist
-
-*.txt
-*.log
+/wheelhouse

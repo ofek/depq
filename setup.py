@@ -17,6 +17,15 @@ setup(
     url='https://github.com/Ofekmeister/depq',
     license='MIT',
 
+    keywords=[
+        'double ended priority queue',
+        'depq',
+        'priority queue',
+        'collections',
+        'abstract data types',
+        'data types',
+    ],
+
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',

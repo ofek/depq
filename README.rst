@@ -5,7 +5,7 @@
   :target: https://coveralls.io/r/Ofekmeister/depq?branch=master
 
 ==========
-depq
+depq - Double-ended priority queue
 ==========
 
   - Python implementation of a thread-safe and efficient
@@ -25,8 +25,8 @@ Features & advantages of this implementation:
   - Items with equal priorities are sorted in the order they were
     originally added
   - Specific items can be deleted or their priorities changed
-  - Ability to get an item's frequency in DEPQ via count(item) in O(1)
-  - Membership testing with 'in' operator also occurs in O(1)
+  - Membership testing with 'in' operator occurs in O(1) as does
+    getting an item's frequency in DEPQ via count(item)
 
 Implementation:
 
@@ -37,8 +37,9 @@ Implementation:
     where self.high() > priority > self.low() because deque (as a
     doubly linked list) random access is O(n).
 
-    Though, ACTUALLY I've been able to reduce that to O(n) by modifying
-    the binary search to operate while the internal deque is rotating.
+    Though, ACTUALLY that is not the case here as I've been able to
+    reduce that to O(n) by modifying the binary search to operate while
+    the internal deque is concurrently rotating.
 
 Notes:
 
@@ -52,3 +53,5 @@ Notes:
     one considers the extra functionality gained coupled with the
     fact that the other 2 main operations popfirst() and poplast() now
     occur in constant time.
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/Ofekmeister/depq/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
