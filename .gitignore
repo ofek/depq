@@ -1,6 +1,6 @@
 *.pyc
 /.coverage
-/katutil.egg-info
+/depq.egg-info
 
 /.idea
 /build
