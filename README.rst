@@ -1,5 +1,5 @@
 .. image:: https://travis-ci.org/Ofekmeister/depq.svg?branch=master
-    :target: https://travis-ci.org/Ofekmeister/depq
+  :target: https://travis-ci.org/Ofekmeister/depq
 
 .. image:: https://coveralls.io/repos/Ofekmeister/depq/badge.svg?branch=master
   :target: https://coveralls.io/r/Ofekmeister/depq?branch=master
@@ -54,4 +54,5 @@ Notes:
     fact that the other 2 main operations popfirst() and poplast() now
     occur in constant time.
 
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/Ofekmeister/depq/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+.. image:: https://d2weczhvl823v0.cloudfront.net/Ofekmeister/depq/trend.png
+  :target: https://bitdeli.com/free
