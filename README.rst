@@ -46,7 +46,11 @@ Notes:
 - The items in DEPQ are also stored along with their frequency in a
   separate dict for O(1) lookup. If item is un-hashable, the repr()
   of that item is stored instead. So 'item in DEPQ' would check the
+<<<<<<< HEAD
   dict for item and if TypeError is raised it would try repr(item).
+=======
+  dict for item and if TypeError is thrown it would try repr(item).
+>>>>>>> origin/master
 - This implementation inserts in the middle in linear time whereas
   a textbook DEPQ is O(log n). In actual use cases though, this
   infinitesimal increase in run time is irrelevant, especially when
