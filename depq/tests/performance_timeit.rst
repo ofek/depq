@@ -2,14 +2,14 @@ I wanted to see how my optimized binary search did against other search algorith
 depq, so I wrote 2 other insert functions that would to my knowledge be closest and tested
 all 3. The tests are below, followed by the code for both functions. The test shows the
 average time it takes to insert 100 items with random priorities and is repeated 50 times.
+The other 2 functions also don't update the dict nor have the locking overhead.
 
 
 TESTS:
 
-C:\Users\Ofek>python
+C:\Users\Ofek\Desktop\code>python
 Python 3.4.2 (v3.4.2:ab2c023a9432, Oct  6 2014, 22:15:05) [MSC v.1600 32 bit (Intel)] on win32
 Type "help", "copyright", "credits" or "license" for more information.
->>>
 >>> import timeit
 >>> from numpy import mean
 >>>
@@ -23,11 +23,11 @@ Type "help", "copyright", "credits" or "license" for more information.
 ... """
 >>>
 >>> mean(timeit.Timer('for r in randoms:d.linear_insert(None, r)', setup=s).repeat(50, 1))
-3.6656986826664957
+2.0358815104950998
 >>> mean(timeit.Timer('for r in randoms:d.binary_insert(None, r)', setup=s).repeat(50, 1))
-0.96281240967293569
+0.5878829692700015
 >>> mean(timeit.Timer('for r in randoms:d.insert(None, r)', setup=s).repeat(50, 1))
-0.36838486254875036
+0.37147238670797833
 >>>
 
 

@@ -23,7 +23,6 @@ setup(
         'priority queue',
         'collections',
         'abstract data types',
-        'data types',
     ],
 
     classifiers=[
