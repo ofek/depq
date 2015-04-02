@@ -167,7 +167,7 @@ DEPQ([])
 ...     depq.insert([i], i)  # Unhashable types allowed but don't mutate them!
 ...
 >>> depq
-DEPQ([(4, 4), (3, 3), (2, 2), (1, 1), (0, 0)])
+DEPQ([([4], 4), ([3], 3), ([2], 2), ([1], 1), ([0], 0)])
 >>>
 >>> binary_depq = pickle.dumps(depq)
 >>> print(fill(str(binary_depq), 77))
