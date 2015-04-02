@@ -119,8 +119,8 @@ True
 >>> depq                      # with given priority, or default DEPQ.start
 DEPQ([('starter', 0)])
 >>>
->>> depq.addfirst('high')  # Default priority DEPQ.start
->>> depq.addlast('low')  # Default priority DEPQ.start
+>>> depq.addfirst('high')  # Default priority DEPQ.high()
+>>> depq.addlast('low')  # Default priority DEPQ.low()
 >>> depq
 DEPQ([('high', 0), ('starter', 0), ('low', 0)])
 >>> depq.addfirst('higher', depq.high() + 1)
