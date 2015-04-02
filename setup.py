@@ -15,7 +15,9 @@ setup(
     maintainer='Ofek Lev',
     maintainer_email='ofekmeister@gmail.com',
     url='https://github.com/Ofekmeister/depq',
+    download_url='https://github.com/Ofekmeister/depq',
     license='MIT',
+    platforms=None,
 
     keywords=[
         'double ended priority queue',
