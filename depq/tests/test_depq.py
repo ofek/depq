@@ -1,4 +1,6 @@
 import unittest
+import pickle
+import json
 from random import SystemRandom
 from depq import DEPQ
 
@@ -448,6 +450,24 @@ class DEPQTest(unittest.TestCase):
         self.depq.remove('test', 2)
         self.assertEqual(self.depq.low(), 5)
         self.assertEqual(is_ordered(self.depq), True)
+
+    def test_pickle(self):
+        for i in range(5):
+            self.depq.insert([i], i)
+        binary_depq = pickle.dumps(self.depq)
+        depq_from_pickle = pickle.loads(binary_depq)
+        self.assertEqual(self.depq.data, depq_from_pickle.data)
+        self.assertEqual(self.depq.items, depq_from_pickle.items)
+        self.assertEqual(type(depq_from_pickle.lock).__name__, 'lock')
+
+    def test_json(self):
+        for i in range(5):
+            self.depq.insert([i], i)
+        json_depq = json.dumps(self.depq.to_json())
+        depq_from_json = DEPQ.from_json(json_depq)
+        self.assertEqual(self.depq.data, depq_from_json.data)
+        self.assertEqual(self.depq.items, depq_from_json.items)
+        self.assertEqual(type(depq_from_json.lock).__name__, 'lock')
 
 if __name__ == '__main__':
     unittest.main()

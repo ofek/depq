@@ -32,8 +32,10 @@ depq - Double-ended priority queue
   FIFO/LIFO queue.
 
 Features & advantages of this implementation:
+---------------------------------------------
 
 - Completely thread-safe
+- Serializable via pickling or JSON
 - Priority values can be ints/floats, numpy types, strings, or
   any other comparable type you choose!
 - popfirst() and poplast() have O(1) performance instead of
@@ -46,6 +48,7 @@ Features & advantages of this implementation:
   getting an item's frequency in DEPQ via count(item)
 
 Implementation:
+---------------
 
 - Priorities are always in proper order, thus, a binary search
   is performed to find the right index with which to insert new
@@ -58,7 +61,147 @@ Implementation:
   reduce that to O(n) by modifying the binary search to operate while
   the internal deque is concurrently rotating.
 
+Examples:
+---------
+
+>>> from textwrap import fill  # For nice wrapped printing
+>>> from depq import DEPQ
+>>>
+>>> depq = DEPQ(start=0)  # Default. DEPQ.start only used for addfirst &
+>>>                       # addlast without argument on empty DEPQ
+>>>
+>>> # Add some characters with their ordinal
+>>> # values as priority and keep count
+>>> for c in 'AN_ERRONEOUS_STRING':
+...     count = list(  # This is hacky and not important, skip next 4 lines :)
+...         x + 1 if '{} #{}'.format(c, x + 1) in depq
+...         else next(iter(())) if x != 0 else 0
+...         for x in range(len(depq) + 1)
+...     )[-1]
+...     depq.insert('{} #{}'.format(c, count + 1), ord(c))
+...
+>>> print(fill(str(depq), 77))
+DEPQ([('_ #1', 95), ('_ #2', 95), ('U #1', 85), ('T #1', 84), ('S #1', 83),
+('S #2', 83), ('R #1', 82), ('R #2', 82), ('R #3', 82), ('O #1', 79), ('O
+#2', 79), ('N #1', 78), ('N #2', 78), ('N #3', 78), ('I #1', 73), ('G #1',
+71), ('E #1', 69), ('E #2', 69), ('A #1', 65)])
+>>>
+>>> # As you can see items with equal priorities are sorted in the order
+>>> # they were originally added. Also note DEPQ root (depq[0]) is highest
+>>> # priority like a max heap.
+>>>
+>>> depq.first()
+'_ #1'
+>>> depq.last()
+'A #1'
+>>> depq.high()
+95
+>>> depq.low()
+65
+>>> depq[7]  # Returns tuple(item, priority)
+('R #2', 82)
+>>>
+>>> depq.poplast()
+('A #1', 65)
+>>> depq.last()
+'E #2'
+>>>
+>>> depq.size()  # Alias for len(DEPQ)
+18
+>>> depq.is_empty()
+False
+>>> depq.clear()
+>>> depq.is_empty()
+True
+>>>
+>>> depq.addfirst('starter')  # For an empty DEPQ, addfirst & addlast are
+>>>                           # functionally identical; they add item to DEPQ
+>>> depq                      # with given priority, or default DEPQ.start
+DEPQ([('starter', 0)])
+>>>
+>>> depq.addfirst('high')  # Default priority DEPQ.start
+>>> depq.addlast('low')  # Default priority DEPQ.start
+>>> depq
+DEPQ([('high', 0), ('starter', 0), ('low', 0)])
+>>> depq.addfirst('higher', depq.high() + 1)
+>>> depq.addlast('lower', depq.low() - 1)
+>>> depq
+DEPQ([('higher', 1), ('high', 0), ('starter', 0), ('low', 0), ('lower', -1)])
+>>>
+>>> depq.addfirst('highest', 0)  # Invalid priority raises exception
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "C:\Python34\lib\depq.py", line 309, in addfirst
+    raise ValueError('Priority must be >= '
+ValueError: Priority must be >= highest priority.
+>>>
+>>> del depq[0]  # As does del
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "C:\Python34\lib\depq.py", line 577, in __delitem__
+    raise NotImplementedError('Items cannot be deleted by '
+NotImplementedError: Items cannot be deleted by referencing arbitrary indices.
+>>>
+>>> depq.clear()
+>>> depq.count(None)
+0
+>>> for i in range(10):
+...     depq.insert(None, i)
+...
+>>> print(fill(str(depq), 77))
+DEPQ([(None, 9), (None, 8), (None, 7), (None, 6), (None, 5), (None, 4),
+(None, 3), (None, 2), (None, 1), (None, 0)])
+>>>
+>>> None in depq
+True
+>>> depq.count(None)
+10
+>>> depq.remove(None)  # Removes item from DEPQ, default # of removals is 1
+[(None, 0)]
+>>>
+>>> print(fill(str(depq), 77))
+DEPQ([(None, 9), (None, 8), (None, 7), (None, 6), (None, 5), (None, 4),
+(None, 3), (None, 2), (None, 1)])
+>>>
+>>> depq.remove(None, 4)  # As you see, returns list of tuple(item, priority)
+[(None, 1), (None, 2), (None, 3), (None, 4)]
+>>> print(fill(str(depq), 77))
+DEPQ([(None, 9), (None, 8), (None, 7), (None, 6), (None, 5)])
+>>>
+>>> depq[None] = 7  # Alias for DEPQ.insert(item, priority)
+>>> print(fill(str(depq), 77))
+DEPQ([(None, 9), (None, 8), (None, 7), (None, 7), (None, 6), (None, 5)])
+>>>
+>>> depq.elim(None)  # This simply calls DEPQ.remove(item, -1)
+[(None, 5), (None, 6), (None, 7), (None, 7), (None, 8), (None, 9)]
+>>> print(fill(str(depq), 77))
+DEPQ([])
+>>>
+>>> import pickle  # Pickling won't work if items aren't picklable
+>>> import json  # JSON won't work if items aren't JSON serializable
+>>>
+>>> for i in range(5):
+...     depq.insert([i], i)  # Unhashable types allowed but don't mutate them!
+...
+>>> depq
+DEPQ([(4, 4), (3, 3), (2, 2), (1, 1), (0, 0)])
+>>>
+>>> binary_depq = pickle.dumps(depq)
+>>> json_depq = json.dumps(depq.to_json())
+>>>
+>>> depq_from_pickle = pickle.loads(binary_depq)
+>>> depq_from_json = DEPQ.from_json(json_depq)  # Classmethod returns new DEPQ
+>>>
+>>> depq
+DEPQ([([4], 4), ([3], 3), ([2], 2), ([1], 1), ([0], 0)])
+>>> depq_from_pickle
+DEPQ([([4], 4), ([3], 3), ([2], 2), ([1], 1), ([0], 0)])
+>>> depq_from_json
+DEPQ([([4], 4), ([3], 3), ([2], 2), ([1], 1), ([0], 0)])
+>>>
+
 Notes:
+------
 
 - The items in DEPQ are also stored along with their frequency in a
   separate dict for O(1) lookup. If item is un-hashable, the repr()
@@ -71,6 +214,7 @@ Notes:
   fact that the other 2 main operations popfirst() and poplast() now
   occur in constant time."""
 
+import json
 from collections import deque
 from threading import Lock
 
@@ -162,13 +306,12 @@ class DEPQ:
                 priority = self.data[0][1]
                 if new_priority is not None:
                     if new_priority < priority:
-                        raise ValueError
+                        raise ValueError('Priority must be >= '
+                                         'highest priority.')
                     else:
                         priority = new_priority
             except IndexError:
                 priority = self.start if new_priority is None else new_priority
-            except ValueError:
-                raise ValueError('\nPriority must be >= highest priority.')
 
             self.data.appendleft((item, priority))
 
@@ -193,13 +336,12 @@ class DEPQ:
                 priority = self.data[-1][1]
                 if new_priority is not None:
                     if new_priority > priority:
-                        raise ValueError
+                        raise ValueError('Priority must be <= '
+                                         'lowest priority.')
                     else:
                         priority = new_priority
             except IndexError:
                 priority = self.start if new_priority is None else new_priority
-            except ValueError:
-                raise ValueError('\nPriority must be <= lowest priority.')
 
             self.data.append((item, priority))
 
@@ -221,8 +363,9 @@ class DEPQ:
 
             try:
                 tup = self.data.popleft()
-            except IndexError:
-                raise IndexError('DEPQ is already empty')
+            except IndexError as ex:
+                ex.args = ('DEPQ is already empty',)
+                raise
 
             try:
                 self.items[tup[0]] -= 1
@@ -244,8 +387,9 @@ class DEPQ:
 
             try:
                 tup = self.data.pop()
-            except IndexError:
-                raise IndexError('DEPQ is already empty')
+            except IndexError as ex:
+                ex.args = ('DEPQ is already empty',)
+                raise
 
             try:
                 self.items[tup[0]] -= 1
@@ -264,37 +408,40 @@ class DEPQ:
         with self.lock:
             try:
                 return self.data[0][0]
-            except IndexError:
-                raise IndexError('DEPQ is empty')
+            except IndexError as ex:
+                ex.args = ('DEPQ is empty',)
+                raise
 
     def last(self):
         """Gets item with lowest priority. Performance: O(1)"""
         with self.lock:
             try:
                 return self.data[-1][0]
-            except IndexError:
-                raise IndexError('DEPQ is empty')
+            except IndexError as ex:
+                ex.args = ('DEPQ is empty',)
+                raise
 
     def high(self):
         """Gets highest priority. Performance: O(1)"""
         with self.lock:
             try:
                 return self.data[0][1]
-            except IndexError:
-                raise IndexError('DEPQ is empty')
+            except IndexError as ex:
+                ex.args = ('DEPQ is empty',)
+                raise
 
     def low(self):
         """Gets lowest priority. Performance: O(1)"""
         with self.lock:
             try:
                 return self.data[-1][1]
-            except IndexError:
-                raise IndexError('DEPQ is empty')
+            except IndexError as ex:
+                ex.args = ('DEPQ is empty',)
+                raise
 
     def size(self):
         """Gets length of DEPQ. Performance: O(1)"""
-        with self.lock:
-            return len(self.data)
+        return len(self.data)
 
     def clear(self):
         """Empties DEPQ. Performance: O(1)"""
@@ -304,25 +451,22 @@ class DEPQ:
 
     def is_empty(self):
         """Returns True if DEPQ is empty, else False. Performance: O(1)"""
-        with self.lock:
-            return len(self.data) == 0
+        return len(self.data) == 0
 
     def count(self, item):
         """Returns number of occurrences of item in DEPQ. Performance: O(1)"""
 
-        with self.lock:
-
-            # If item isn't in DEPQ, returning 0 is
-            # more appropriate than None, methinks.
+        # If item isn't in DEPQ, returning 0 is
+        # more appropriate than None, methinks.
+        try:
+            return self.items[item]
+        except KeyError:
+            return 0
+        except TypeError:
             try:
-                return self.items[item]
+                return self.items[repr(item)]
             except KeyError:
                 return 0
-            except TypeError:
-                try:
-                    return self.items[repr(item)]
-                except KeyError:
-                    return 0
 
     def remove(self, item, count=1):
         """Removes occurrences of given item in ascending priority. Default
@@ -334,12 +478,14 @@ class DEPQ:
 
             try:
                 count = int(count)
-            except ValueError:
-                raise ValueError('{} cannot be represented as '
-                                 'an integer'.format(count))
-            except TypeError:
-                raise TypeError('{} cannot be represented as '
-                                'an integer'.format(count))
+            except ValueError as ex:
+                ex.args = ('{} cannot be represented as an '
+                           'integer'.format(count),)
+                raise
+            except TypeError as ex:
+                ex.args = ('{} cannot be represented as an '
+                           'integer'.format(count),)
+                raise
 
             removed = []
 
@@ -379,6 +525,31 @@ class DEPQ:
         tuple(item, priority). Performance: O(n)"""
         return self.remove(item, -1)
 
+    def to_json(self):
+        with self.lock:
+            state = self.__dict__.copy()
+            state['data'] = list(state['data'])
+            del state['lock']
+            return state
+
+    @classmethod
+    def from_json(cls, json_str):
+        depq = DEPQ()
+        state = json.loads(json_str)
+        state['data'] = deque(tuple(pair) for pair in state['data'])
+        depq.__dict__.update(state)
+        return depq
+
+    def __getstate__(self):
+        with self.lock:
+            state = self.__dict__.copy()
+            del state['lock']
+            return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.lock = Lock()
+
     def __contains__(self, item):
         try:
             return item in self.items
@@ -394,28 +565,29 @@ class DEPQ:
         with self.lock:
             try:
                 return self.data[index]
-            except IndexError:
-                raise IndexError('DEPQ has no index {}'.format(index))
+            except IndexError as ex:
+                ex.args = ('DEPQ has no index {}'.format(index),)
+                raise
 
     def __setitem__(self, item, priority):
         """Alias for self.insert"""
         self.insert(item, priority)
 
     def __delitem__(self, index):
-        raise NotImplementedError('\nItems cannot be deleted by '
+        raise NotImplementedError('Items cannot be deleted by '
                                   'referencing arbitrary indices.')
 
     def __len__(self):
-        with self.lock:
-            return len(self.data)
-
-    def __repr__(self):
-        with self.lock:
-            return 'DEPQ([{}])'.format(', '.join(str(item) for item in self.data))
+        return len(self.data)
 
     def __str__(self):
         with self.lock:
-            return 'DEPQ([{}])'.format(', '.join(str(item) for item in self.data))
+            return 'DEPQ([{}])'.format(
+                ', '.join(str(item) for item in self.data)
+            )
+
+    def __repr__(self):
+        return self.__str__()
 
     def __unicode__(self):
         return self.__str__()

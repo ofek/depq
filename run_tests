@@ -1,2 +1,0 @@
-coverage run -m unittest discover --start-directory depq
-coverage report -m
