@@ -236,64 +236,68 @@ class DEPQ:
 
         with self.lock:
 
+            self_data = self.data
+            rotate = self_data.rotate
+            self_items = self.items
+
             try:
 
-                if priority > self.data[0][1]:
-                    self.data.appendleft((item, priority))
-                elif priority <= self.data[-1][1]:
-                    self.data.append((item, priority))
+                if priority > self_data[0][1]:
+                    self_data.appendleft((item, priority))
+                elif priority <= self_data[-1][1]:
+                    self_data.append((item, priority))
                 else:
 
-                    length = len(self.data)
+                    length = len(self_data) + 1
                     mid = length // 2
                     shift = 0
 
                     while True:
 
-                        if priority <= self.data[0][1]:
-                            self.data.rotate(-mid)
+                        if priority <= self_data[0][1]:
+                            rotate(-mid)
                             shift += mid
                             mid //= 2
                             if mid == 0:
                                 mid += 1
 
                         else:
-                            self.data.rotate(mid)
+                            rotate(mid)
                             shift -= mid
                             mid //= 2
                             if mid == 0:
                                 mid += 1
 
-                        if self.data[-1][1] >= priority > self.data[0][1]:
-                            self.data.appendleft((item, priority))
+                        if self_data[-1][1] >= priority > self_data[0][1]:
+                            self_data.appendleft((item, priority))
 
                             # When returning to original position, never shift
                             # more than half length of DEPQ i.e. if length is
                             # 100 and we rotated -75, rotate -25, not 75
                             if shift > length // 2:
-                                shift = length % shift + 1
-                                self.data.rotate(-shift)
+                                shift = length % shift
+                                rotate(-shift)
                             else:
-                                self.data.rotate(shift)
+                                rotate(shift)
 
                             break
 
                 try:
-                    self.items[item] += 1
+                    self_items[item] += 1
                 except KeyError:
-                    self.items[item] = 1
+                    self_items[item] = 1
                 except TypeError:
                     try:
-                        self.items[repr(item)] += 1
+                        self_items[repr(item)] += 1
                     except KeyError:
-                        self.items[repr(item)] = 1
+                        self_items[repr(item)] = 1
 
             except IndexError:
-                self.data.append((item, priority))
+                self_data.append((item, priority))
                 try:
-                    self.items[item] = 1
+                    self_items[item] = 1
                 except TypeError:
-                    self.items[repr(item)] = 1
+                    self_items[repr(item)] = 1
 
     def addfirst(self, item, new_priority=None):
         """Adds item to DEPQ as highest priority. The default
@@ -302,8 +306,10 @@ class DEPQ:
 
         with self.lock:
 
+            self_data = self.data
+
             try:
-                priority = self.data[0][1]
+                priority = self_data[0][1]
                 if new_priority is not None:
                     if new_priority < priority:
                         raise ValueError('Priority must be >= '
@@ -313,17 +319,18 @@ class DEPQ:
             except IndexError:
                 priority = self.start if new_priority is None else new_priority
 
-            self.data.appendleft((item, priority))
+            self_data.appendleft((item, priority))
+            self_items = self.items
 
             try:
-                self.items[item] += 1
+                self_items[item] += 1
             except KeyError:
-                self.items[item] = 1
+                self_items[item] = 1
             except TypeError:
                 try:
-                    self.items[repr(item)] += 1
+                    self_items[repr(item)] += 1
                 except KeyError:
-                    self.items[repr(item)] = 1
+                    self_items[repr(item)] = 1
 
     def addlast(self, item, new_priority=None):
         """Adds item to DEPQ as lowest priority. The default
@@ -332,8 +339,10 @@ class DEPQ:
 
         with self.lock:
 
+            self_data = self.data
+
             try:
-                priority = self.data[-1][1]
+                priority = self_data[-1][1]
                 if new_priority is not None:
                     if new_priority > priority:
                         raise ValueError('Priority must be <= '
@@ -343,17 +352,18 @@ class DEPQ:
             except IndexError:
                 priority = self.start if new_priority is None else new_priority
 
-            self.data.append((item, priority))
+            self_data.append((item, priority))
+            self_items = self.items
 
             try:
-                self.items[item] += 1
+                self_items[item] += 1
             except KeyError:
-                self.items[item] = 1
+                self_items[item] = 1
             except TypeError:
                 try:
-                    self.items[repr(item)] += 1
+                    self_items[repr(item)] += 1
                 except KeyError:
-                    self.items[repr(item)] = 1
+                    self_items[repr(item)] = 1
 
     def popfirst(self):
         """Removes item with highest priority from DEPQ. Returns
@@ -367,15 +377,17 @@ class DEPQ:
                 ex.args = ('DEPQ is already empty',)
                 raise
 
+            self_items = self.items
+
             try:
-                self.items[tup[0]] -= 1
-                if self.items[tup[0]] == 0:
-                    del self.items[tup[0]]
+                self_items[tup[0]] -= 1
+                if self_items[tup[0]] == 0:
+                    del self_items[tup[0]]
             except TypeError:
                 r = repr(tup[0])
-                self.items[r] -= 1
-                if self.items[r] == 0:
-                    del self.items[r]
+                self_items[r] -= 1
+                if self_items[r] == 0:
+                    del self_items[r]
 
             return tup
 
@@ -391,15 +403,17 @@ class DEPQ:
                 ex.args = ('DEPQ is already empty',)
                 raise
 
+            self_items = self.items
+
             try:
-                self.items[tup[0]] -= 1
-                if self.items[tup[0]] == 0:
-                    del self.items[tup[0]]
+                self_items[tup[0]] -= 1
+                if self_items[tup[0]] == 0:
+                    del self_items[tup[0]]
             except TypeError:
                 r = repr(tup[0])
-                self.items[r] -= 1
-                if self.items[r] == 0:
-                    del self.items[r]
+                self_items[r] -= 1
+                if self_items[r] == 0:
+                    del self_items[r]
 
             return tup
 
@@ -488,15 +502,16 @@ class DEPQ:
                 raise
 
             removed = []
+            self_items = self.items
 
             try:
-                item_freq = self.items[item]
+                item_freq = self_items[item]
                 item_repr = item
             except KeyError:
                 return removed
             except TypeError:
                 try:
-                    item_freq = self.items[repr(item)]
+                    item_freq = self_items[repr(item)]
                     item_repr = repr(item)
                 except KeyError:
                     return removed
@@ -504,19 +519,22 @@ class DEPQ:
             if count == -1:
                 count = item_freq
 
+            self_data = self.data
+            rotate = self_data.rotate
+            pop = self_data.pop
             counter = 0
 
-            for i in range(len(self.data)):
-                if count > counter and item == self.data[-1][0]:
-                    removed.append(self.data.pop())
+            for i in range(len(self_data)):
+                if count > counter and item == self_data[-1][0]:
+                    removed.append(pop())
                     counter += 1
                     continue
-                self.data.rotate()
+                rotate()
 
             if item_freq <= count:
-                del self.items[item_repr]
+                del self_items[item_repr]
             else:
-                self.items[item_repr] -= count
+                self_items[item_repr] -= count
 
             return removed
 
