@@ -145,14 +145,14 @@ DEPQ([('higher', 1), ('high', 1), ('starter', 0), ('low', -1), ('lower', -1)])
 >>> depq.addfirst('highest', 0)  # Invalid priority raises exception
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
-  File "C:\Python34\lib\depq.py", line 334, in addfirst
+  File "C:\Python34\lib\depq.py", line 340, in addfirst
     raise ValueError('Priority must be >= '
 ValueError: Priority must be >= highest priority.
 >>>
 >>> del depq[0]  # As does del
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
-  File "C:\Python34\lib\depq.py", line 633, in __delitem__
+  File "C:\Python34\lib\depq.py", line 639, in __delitem__
     raise NotImplementedError('Items cannot be deleted by '
 NotImplementedError: Items cannot be deleted by referencing arbitrary indices.
 >>>
