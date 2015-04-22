@@ -50,8 +50,13 @@ Examples:
 >>> from textwrap import fill  # For nice wrapped printing
 >>> from depq import DEPQ
 >>>
->>> depq = DEPQ(start=0)  # Default. DEPQ.start only used for addfirst &
->>>                       # addlast without argument on empty DEPQ
+>>> # Defaults. If iterable is not None, extend(iterable) will be
+>>> # called (example below). If maxlen is not None, abs(int(maxlen))
+>>> # will become the length limit. If a maxlen is set and an item
+>>> # is added with a priority > lowest prioritized item, it will be
+>>> # added and the last item will be popped. After instantiation, the
+>>> # maxlen can be retrieved with maxlen() and set with set_maxlen(length).
+>>> depq = DEPQ(iterable=None, maxlen=None)
 >>>
 >>> # Add some characters with their ordinal
 >>> # values as priority and keep count
@@ -61,7 +66,8 @@ Examples:
 ...         else next(iter(())) if x != 0 else 0
 ...         for x in range(len(depq) + 1)
 ...     )[-1]
-...     depq.insert('{} #{}'.format(c, count + 1), ord(c))
+...
+...     depq.insert('{} #{}'.format(c, count + 1), ord(c))  # item, priority
 ...
 >>> print(fill(str(depq), 77))
 DEPQ([('_ #1', 95), ('_ #2', 95), ('U #1', 85), ('T #1', 84), ('S #1', 83),
@@ -97,31 +103,39 @@ False
 >>> depq.is_empty()
 True
 >>>
+>>> # Extend any length iterable of iterables of length >= 2
+>>> depq.extend([('bar', 1, 'arbitrary'), (None, 5), ('foo', 2, 'blah')])
+>>> depq
+DEPQ([(None, 5), ('foo', 2), ('bar', 1)])
+>>>
+>>> depq.clear()
+>>>
 >>> depq.addfirst('starter')  # For an empty DEPQ, addfirst & addlast are
 >>>                           # functionally identical; they add item to DEPQ
->>> depq                      # with given priority, or default DEPQ.start
+>>> depq                      # with given priority, or default 0
 DEPQ([('starter', 0)])
 >>>
->>> depq.addfirst('high')  # Default priority DEPQ.high()
->>> depq.addlast('low')  # Default priority DEPQ.low()
+>>> depq.addfirst('high', depq.high() + 1)
+>>> depq.addlast('low', depq.low() - 1)
 >>> depq
-DEPQ([('high', 0), ('starter', 0), ('low', 0)])
->>> depq.addfirst('higher', depq.high() + 1)
->>> depq.addlast('lower', depq.low() - 1)
+DEPQ([('high', 1), ('starter', 0), ('low', -1)])
+>>>
+>>> depq.addfirst('higher')  # Default priority DEPQ.high()
+>>> depq.addlast('lower')  # Default priority DEPQ.low()
 >>> depq
-DEPQ([('higher', 1), ('high', 0), ('starter', 0), ('low', 0), ('lower', -1)])
+DEPQ([('higher', 1), ('high', 1), ('starter', 0), ('low', -1), ('lower', -1)])
 >>>
 >>> depq.addfirst('highest', 0)  # Invalid priority raises exception
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
-  File "C:\Python34\lib\depq.py", line 308, in addfirst
+  File "C:\Python34\lib\depq.py", line 340, in addfirst
     raise ValueError('Priority must be >= '
 ValueError: Priority must be >= highest priority.
 >>>
 >>> del depq[0]  # As does del
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
-  File "C:\Python34\lib\depq.py", line 576, in __delitem__
+  File "C:\Python34\lib\depq.py", line 639, in __delitem__
     raise NotImplementedError('Items cannot be deleted by '
 NotImplementedError: Items cannot be deleted by referencing arbitrary indices.
 >>>

@@ -41,11 +41,20 @@ class DEPQTest(unittest.TestCase):
         self.depq.clear()
 
     def test_init_default(self):
-        self.assertEqual(self.depq.start, 0)
+        self.assertEqual(len(self.depq.data), 0)
+        self.assertEqual(self.depq._maxlen, None)
 
-    def test_init_set_start(self):
-        depq_non_default = DEPQ(start=5)
-        self.assertEqual(depq_non_default.start, 5)
+    def test_init_set_iterable(self):
+        depq_non_default = DEPQ([['last', 1], ['first', 3]])
+        self.assertEqual(len(depq_non_default), 2)
+        self.assertEqual(is_ordered(depq_non_default), True)
+
+    def test_maxlen(self):
+        self.assertEqual(self.depq.maxlen(), None)
+
+    def test_set_maxlen(self):
+        self.depq.set_maxlen(5)
+        self.assertEqual(self.depq.maxlen(), 5)
 
     def test_count_unset_with_hashable(self):
         self.assertEqual(self.depq.count('test'), 0)
@@ -105,6 +114,10 @@ class DEPQTest(unittest.TestCase):
         for i in range(self.random.randrange(20, 100)):
             self.depq.insert(None, self.random.randrange(-1000, 1000))
         self.assertEqual(is_ordered(self.depq), True)
+
+    def test_insert_exceed_maxlen(self):
+        depq_non_default = DEPQ(((None, i) for i in range(5)), 4)
+        self.assertEqual(depq_non_default.low(), 1)
 
     def test__repr__empty(self):
         self.assertEqual(repr(self.depq), "DEPQ([])")
@@ -223,7 +236,7 @@ class DEPQTest(unittest.TestCase):
 
     def test_addfirst_initial_priority(self):
         self.depq.addfirst(None)
-        self.assertEqual(self.depq.high(), self.depq.start)
+        self.assertEqual(self.depq.high(), 0)
 
     def test_addfirst_initial_priority_with_arg(self):
         self.depq.addfirst(None, 10)
@@ -252,6 +265,11 @@ class DEPQTest(unittest.TestCase):
         self.depq.addfirst(['test'])
         self.assertEqual(self.depq.count(['test']), 2)
 
+    def test_addfirst_exceed_maxlen(self):
+        depq_non_default = DEPQ(((None, i) for i in range(5)), 5)
+        depq_non_default.addfirst(None, 10)
+        self.assertEqual(depq_non_default.low(), 1)
+
     def test_addlast_populate_default(self):
         for i in range(self.random.randrange(20, 100)):
             self.depq.addlast(None)
@@ -266,7 +284,7 @@ class DEPQTest(unittest.TestCase):
 
     def test_addlast_initial_priority(self):
         self.depq.addlast(None)
-        self.assertEqual(self.depq.high(), self.depq.start)
+        self.assertEqual(self.depq.high(), 0)
 
     def test_addlast_initial_priority_with_arg(self):
         self.depq.addlast(None, 10)
@@ -294,6 +312,11 @@ class DEPQTest(unittest.TestCase):
         self.depq.addlast(['test'])
         self.depq.addfirst(['test'])
         self.assertEqual(self.depq.count(['test']), 2)
+
+    def test_addlast_exceed_maxlen(self):
+        depq_non_default = DEPQ(((None, i) for i in range(5)), 5)
+        depq_non_default.addlast(None, -1)
+        self.assertEqual(depq_non_default.low(), 0)
 
     def test_popfirst_empty_raise_error(self):
         with self.assertRaises(IndexError):

@@ -67,8 +67,13 @@ Examples:
 >>> from textwrap import fill  # For nice wrapped printing
 >>> from depq import DEPQ
 >>>
->>> depq = DEPQ(start=0)  # Default. DEPQ.start only used for addfirst &
->>>                       # addlast without argument on empty DEPQ
+>>> # Defaults. If iterable is not None, extend(iterable) will be
+>>> # called (example below). If maxlen is not None, abs(int(maxlen))
+>>> # will become the length limit. If a maxlen is set and an item
+>>> # is added with a priority > lowest prioritized item, it will be
+>>> # added and the last item will be popped. After instantiation, the
+>>> # maxlen can be retrieved with maxlen() and set with set_maxlen(length).
+>>> depq = DEPQ(iterable=None, maxlen=None)
 >>>
 >>> # Add some characters with their ordinal
 >>> # values as priority and keep count
@@ -78,7 +83,8 @@ Examples:
 ...         else next(iter(())) if x != 0 else 0
 ...         for x in range(len(depq) + 1)
 ...     )[-1]
-...     depq.insert('{} #{}'.format(c, count + 1), ord(c))
+...
+...     depq.insert('{} #{}'.format(c, count + 1), ord(c))  # item, priority
 ...
 >>> print(fill(str(depq), 77))
 DEPQ([('_ #1', 95), ('_ #2', 95), ('U #1', 85), ('T #1', 84), ('S #1', 83),
@@ -114,31 +120,39 @@ False
 >>> depq.is_empty()
 True
 >>>
+>>> # Extend any length iterable of iterables of length >= 2
+>>> depq.extend([('bar', 1, 'arbitrary'), (None, 5), ('foo', 2, 'blah')])
+>>> depq
+DEPQ([(None, 5), ('foo', 2), ('bar', 1)])
+>>>
+>>> depq.clear()
+>>>
 >>> depq.addfirst('starter')  # For an empty DEPQ, addfirst & addlast are
 >>>                           # functionally identical; they add item to DEPQ
->>> depq                      # with given priority, or default DEPQ.start
+>>> depq                      # with given priority, or default 0
 DEPQ([('starter', 0)])
 >>>
->>> depq.addfirst('high')  # Default priority DEPQ.high()
->>> depq.addlast('low')  # Default priority DEPQ.low()
+>>> depq.addfirst('high', depq.high() + 1)
+>>> depq.addlast('low', depq.low() - 1)
 >>> depq
-DEPQ([('high', 0), ('starter', 0), ('low', 0)])
->>> depq.addfirst('higher', depq.high() + 1)
->>> depq.addlast('lower', depq.low() - 1)
+DEPQ([('high', 1), ('starter', 0), ('low', -1)])
+>>>
+>>> depq.addfirst('higher')  # Default priority DEPQ.high()
+>>> depq.addlast('lower')  # Default priority DEPQ.low()
 >>> depq
-DEPQ([('higher', 1), ('high', 0), ('starter', 0), ('low', 0), ('lower', -1)])
+DEPQ([('higher', 1), ('high', 1), ('starter', 0), ('low', -1), ('lower', -1)])
 >>>
 >>> depq.addfirst('highest', 0)  # Invalid priority raises exception
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
-  File "C:\Python34\lib\depq.py", line 309, in addfirst
+  File "C:\Python34\lib\depq.py", line 334, in addfirst
     raise ValueError('Priority must be >= '
 ValueError: Priority must be >= highest priority.
 >>>
 >>> del depq[0]  # As does del
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
-  File "C:\Python34\lib\depq.py", line 577, in __delitem__
+  File "C:\Python34\lib\depq.py", line 633, in __delitem__
     raise NotImplementedError('Items cannot be deleted by '
 NotImplementedError: Items cannot be deleted by referencing arbitrary indices.
 >>>
@@ -221,13 +235,15 @@ from threading import Lock
 
 class DEPQ:
 
-    def __init__(self, start=0):
-        """Initialize as a double-ended queue."""
+    def __init__(self, iterable=None, maxlen=None):
 
         self.data = deque()
         self.items = dict()
-        self.start = start
+        self._maxlen = None if maxlen is None else abs(int(maxlen))
         self.lock = Lock()
+
+        if iterable is not None:
+            self.extend(iterable)
 
     def insert(self, item, priority):
         """Adds item to DEPQ with given priority by performing a binary
@@ -239,13 +255,14 @@ class DEPQ:
             self_data = self.data
             rotate = self_data.rotate
             self_items = self.items
+            maxlen = self._maxlen
 
             try:
 
-                if priority > self_data[0][1]:
-                    self_data.appendleft((item, priority))
-                elif priority <= self_data[-1][1]:
+                if priority <= self_data[-1][1]:
                     self_data.append((item, priority))
+                elif priority > self_data[0][1]:
+                    self_data.appendleft((item, priority))
                 else:
 
                     length = len(self_data) + 1
@@ -299,10 +316,18 @@ class DEPQ:
                 except TypeError:
                     self_items[repr(item)] = 1
 
+            if maxlen is not None and maxlen < len(self_data):
+                self._poplast()
+
+    def extend(self, iterable):
+        """Adds items from iterable to DEPQ. Performance: O(n)"""
+        for item in iterable:
+            self.insert(*item[:2])
+
     def addfirst(self, item, new_priority=None):
         """Adds item to DEPQ as highest priority. The default
-        starting priority is self.start, the default new
-        priority is self.high(). Performance: O(1)"""
+        starting priority is 0, the default new priority is
+        self.high(). Performance: O(1)"""
 
         with self.lock:
 
@@ -317,10 +342,11 @@ class DEPQ:
                     else:
                         priority = new_priority
             except IndexError:
-                priority = self.start if new_priority is None else new_priority
+                priority = 0 if new_priority is None else new_priority
 
             self_data.appendleft((item, priority))
             self_items = self.items
+            maxlen = self._maxlen
 
             try:
                 self_items[item] += 1
@@ -332,14 +358,21 @@ class DEPQ:
                 except KeyError:
                     self_items[repr(item)] = 1
 
+            if maxlen is not None and maxlen < len(self_data):
+                self._poplast()
+
     def addlast(self, item, new_priority=None):
         """Adds item to DEPQ as lowest priority. The default
-        starting priority is self.start, the default new
-        priority is self.low(). Performance: O(1)"""
+        starting priority is 0, the default new priority is
+        self.low(). Performance: O(1)"""
 
         with self.lock:
 
             self_data = self.data
+            maxlen = self._maxlen
+
+            if maxlen is not None and maxlen == len(self_data):
+                return
 
             try:
                 priority = self_data[-1][1]
@@ -350,7 +383,7 @@ class DEPQ:
                     else:
                         priority = new_priority
             except IndexError:
-                priority = self.start if new_priority is None else new_priority
+                priority = 0 if new_priority is None else new_priority
 
             self_data.append((item, priority))
             self_items = self.items
@@ -394,28 +427,31 @@ class DEPQ:
     def poplast(self):
         """Removes item with lowest priority from DEPQ. Returns
         tuple(item, priority). Performance: O(1)"""
-
         with self.lock:
+            self._poplast()
 
-            try:
-                tup = self.data.pop()
-            except IndexError as ex:
-                ex.args = ('DEPQ is already empty',)
-                raise
+    def _poplast(self):
+        """For avoiding lock when keeping maxlen"""
 
-            self_items = self.items
+        try:
+            tup = self.data.pop()
+        except IndexError as ex:
+            ex.args = ('DEPQ is already empty',)
+            raise
 
-            try:
-                self_items[tup[0]] -= 1
-                if self_items[tup[0]] == 0:
-                    del self_items[tup[0]]
-            except TypeError:
-                r = repr(tup[0])
-                self_items[r] -= 1
-                if self_items[r] == 0:
-                    del self_items[r]
+        self_items = self.items
 
-            return tup
+        try:
+            self_items[tup[0]] -= 1
+            if self_items[tup[0]] == 0:
+                del self_items[tup[0]]
+        except TypeError:
+            r = repr(tup[0])
+            self_items[r] -= 1
+            if self_items[r] == 0:
+                del self_items[r]
+
+        return tup
 
     def first(self):
         """Gets item with highest priority. Performance: O(1)"""
@@ -466,6 +502,14 @@ class DEPQ:
     def is_empty(self):
         """Returns True if DEPQ is empty, else False. Performance: O(1)"""
         return len(self.data) == 0
+
+    def maxlen(self):
+        """Returns maxlen"""
+        return self._maxlen
+
+    def set_maxlen(self, length):
+        """Sets maxlen"""
+        self._maxlen = abs(int(length))
 
     def count(self, item):
         """Returns number of occurrences of item in DEPQ. Performance: O(1)"""
