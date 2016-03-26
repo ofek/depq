@@ -3,10 +3,7 @@ python:
   - "2.7"
   - "3.3"
   - "3.4"
-env:
-  - TOXENV=py27
-  - TOXENV=py33
-  - TOXENV=py34
+  - "3.5"
 install:
   - "pip install tox"
   - "pip install coveralls"
