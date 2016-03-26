@@ -11,8 +11,10 @@ depq - Double-ended priority queue
 - Python implementation of a thread-safe and efficient
   double-ended priority queue (DEPQ) in which items and their
   priority values are stored in a deque object as tuples.
-  This can also be used as a regular priority queue, or simply a
-  FIFO/LIFO queue.
+- This of course can also be used as a regular priority queue, or
+  simply a FIFO/LIFO queue.
+- Priority queues have many uses such as scheduling, event driven
+  simulation, heuristic analysis, spam filtering, graph searching, etc.
 
 Features & advantages of this implementation:
 ---------------------------------------------
@@ -22,7 +24,8 @@ Features & advantages of this implementation:
 - Priority values can be ints/floats, numpy types, strings, or
   any other comparable type you choose!
 - popfirst() and poplast() have O(1) performance instead of
-  running in logarithmic time like in a standard DEPQ
+  running in logarithmic time like in a standard DEPQ or other
+  heap-derived structure
 - Naturally fast also because deque object is implemented in C
 - Items with equal priorities are sorted in the order they were
   originally added

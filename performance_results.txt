@@ -1,0 +1,61 @@
+I wanted to see how my optimized binary search did against other
+search algorithms on my DEPQ, so I wrote 2 other insert functions that would
+to my knowledge be closest and tested all 3. The test results are below and
+can be run again by executing the performance check. The test shows the stats
+regarding the time it takes to insert 100 items with random priorities and is
+repeated 150 times. Only the lowest 100 times are used in calculations to
+avoid OS introduced inconsistencies. The check tests the speed of 3 different
+sized DEPQ instances to show how the algorithms scale.
+
+
+Size of DEPQ: 500000
+========================================
+Linear search result:
+==> Minimum: 0.0006374054748619074
+==> Maximum: 0.35020084109504523
+==> Trimean: 0.21744054617943043
+
+Binary search result:
+==> Minimum: 0.050654356257780364
+==> Maximum: 0.059441212536683
+==> Trimean: 0.056811214507256125
+
+Custom search result:
+==> Minimum: 0.056049188090185
+==> Maximum: 0.058485337806189364
+==> Trimean: 0.05775728299961713
+
+Size of DEPQ: 1000000
+========================================
+Linear search result:
+==> Minimum: 0.0004959154683774614
+==> Maximum: 0.6774667591877801
+==> Trimean: 0.47901009762341573
+
+Binary search result:
+==> Minimum: 0.11037201131546226
+==> Maximum: 0.1299377910935391
+==> Trimean: 0.12329669146862443
+
+Custom search result:
+==> Minimum: 0.11221978674689126
+==> Maximum: 0.116283305019806
+==> Trimean: 0.11484972640599267
+
+Size of DEPQ: 3000000
+========================================
+Linear search result:
+==> Minimum: 0.003519972505273472
+==> Maximum: 2.0967044502576755
+==> Trimean: 1.3412798494881883
+
+Binary search result:
+==> Minimum: 0.49417883029354925
+==> Maximum: 0.5835328046682662
+==> Trimean: 0.5553167554987795
+
+Custom search result:
+==> Minimum: 0.3526505327590712
+==> Maximum: 0.36392023512598826
+==> Trimean: 0.3603127652937701
+
