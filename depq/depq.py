@@ -183,7 +183,7 @@ class DEPQ:
         """Removes item with lowest priority from DEPQ. Returns
         tuple(item, priority). Performance: O(1)"""
         with self.lock:
-            self._poplast()
+            return self._poplast()
 
     def _poplast(self):
         """For avoiding lock during inserting to keep maxlen"""
