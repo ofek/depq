@@ -55,7 +55,7 @@ class DEPQTest(unittest.TestCase):
     def test_set_maxlen(self):
         print(self.depq)
         self.depq.extend((None, i) for i in range(7))
-        self.depq.maxlen = 5
+        self.depq.set_maxlen(5)
         print(self.depq)
         self.assertEqual(self.depq.low(), 2)
 

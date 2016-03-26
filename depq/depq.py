@@ -263,8 +263,7 @@ class DEPQ:
         """Returns maxlen"""
         return self._maxlen
 
-    @maxlen.setter
-    def maxlen(self, length):
+    def set_maxlen(self, length):
         """Sets maxlen"""
         print('in')
         with self.lock:
