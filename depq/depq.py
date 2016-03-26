@@ -269,6 +269,7 @@ class DEPQ:
         with self.lock:
             self._maxlen = length
             while len(self.data) > length:
+                print('llllllllllllllllllllll')
                 self._poplast()
 
     def count(self, item):
