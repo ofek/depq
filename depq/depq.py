@@ -183,7 +183,7 @@ class DEPQ:
         """Removes item with lowest priority from DEPQ. Returns
         tuple(item, priority). Performance: O(1)"""
         with self.lock:
-            return self._poplast()
+            self._poplast()
 
     def _poplast(self):
         """For avoiding lock during inserting to keep maxlen"""
@@ -266,11 +266,12 @@ class DEPQ:
     @maxlen.setter
     def maxlen(self, length):
         """Sets maxlen"""
-        self._maxlen = length
-        print(len(self.data))
-        while len(self.data) > length:
-            print('llllllllllllllllllllll')
-            self._poplast()
+        with self.lock:
+            self._maxlen = length
+            print(len(self.data))
+            while len(self.data) > length:
+                print('llllllllllllllllllllll')
+                self._poplast()
 
     def count(self, item):
         """Returns number of occurrences of item in DEPQ. Performance: O(1)"""
