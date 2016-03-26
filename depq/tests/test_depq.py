@@ -53,9 +53,9 @@ class DEPQTest(unittest.TestCase):
         self.assertEqual(self.depq.maxlen, None)
 
     def test_set_maxlen(self):
-        self.depq.clear()
         self.depq.extend((None, i) for i in range(7))
         self.depq.maxlen = 5
+        print(self.depq)
         self.assertEqual(self.depq.low(), 2)
 
     def test_count_unset_with_hashable(self):
