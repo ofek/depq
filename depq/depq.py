@@ -265,13 +265,9 @@ class DEPQ:
 
     def set_maxlen(self, length):
         """Sets maxlen"""
-        print('in')
         with self.lock:
-            print('in lock')
             self._maxlen = length
-            print(len(self.data))
             while len(self.data) > length:
-                print('llllllllllllllllllllll')
                 self._poplast()
 
     def count(self, item):
