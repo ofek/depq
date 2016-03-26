@@ -266,9 +266,10 @@ class DEPQ:
     @maxlen.setter
     def maxlen(self, length):
         """Sets maxlen"""
-        self._maxlen = length
-        while len(self.data) > length:
-            self.poplast()
+        with self.lock:
+            self._maxlen = length
+            while len(self.data) > length:
+                self._poplast()
 
     def count(self, item):
         """Returns number of occurrences of item in DEPQ. Performance: O(1)"""
