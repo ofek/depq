@@ -7,7 +7,7 @@ setup(
     packages=find_packages(),
 
     name='depq',
-    version='1.5.2',
+    version='1.5.3',
     description='Double-ended priority queue',
     long_description=read_me,
     author='Ofek Lev',
