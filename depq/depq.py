@@ -268,6 +268,7 @@ class DEPQ:
         """Sets maxlen"""
         with self.lock:
             self._maxlen = length
+            print(len(self.data))
             while len(self.data) > length:
                 print('llllllllllllllllllllll')
                 self._poplast()
