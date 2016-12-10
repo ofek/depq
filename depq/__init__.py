@@ -1,1 +1,1 @@
-from depq.depq import DEPQ  # pragma: no cover
+from depq import DEPQ  # pragma: no cover
